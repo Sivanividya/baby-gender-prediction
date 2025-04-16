@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Baby Gender Prediction</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-image: url({% if prediction == 'Male' %}
+                   /static/ukpdi8.png
+                {% elif prediction == 'Female' %}
+                   /static/R.jpg
+                {% else %}
+                /static/bg.jpg
+            {% endif %});
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 15px 0 5px;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .option {
+            background: #eee;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .option:hover {
+            background: #4CAF50;
+            color: white;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            justify-content: center;
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .exit-btn {
+            
+            background-color: #f44336;
+            margin-top: 30px;
+        }
+
+        .result {
+           
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            animation: fadeIn 2s ease-in;
+        }
+
+        canvas#confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti" class="hidden"></canvas>
+
+<div class="container" id="formContainer">
+    {% if prediction %}
+        <div class="result">👶 Your baby is a <strong>{{ prediction }}</strong></div>
+        <div class="result">📊 Probability of this gender of baby <strong>{{ probability }}</strong></div>
+        <button class="exit-btn" onclick="exitForm()">Exit</button>
+    {% else %}
+        <form method="POST" id="predictForm">
+            <label>Mother's Age</label>
+            <input type="text" name="age" required>
+
+            <label>Placenta Location</label>
+            <div class="options">
+                <div class="option" onclick="selectOption('Anterior', 'placenta')">Anterior</div>
+                <div class="option" onclick="selectOption('Posterior', 'placenta')">Posterior</div>
+                <div class="option" onclick="selectOption('Fundal', 'placenta')">Fundal</div>
+                <div class="option" onclick="selectOption('Low-lying', 'placenta')">Low-lying</div>
+            </div>
+            <input type="hidden" name="placenta" id="placentaInput">
+
+            <label>Conception Month</label>
+            <select name="month" required>
+                <option value="">--Select--</option>
+                <option>January</option><option>February</option><option>March</option><option>April</option>
+                <option>May</option><option>June</option><option>July</option><option>August</option>
+                <option>September</option><option>October</option><option>November</option><option>December</option>
+            </select>
+
+            <label>Belly Size</label>
+            <div class="options">
+                <div class="option" onclick="selectOption('Small', 'belly')">Small</div>
+                <div class="option" onclick="selectOption('Medium', 'belly')">Medium</div>
+                <div class="option" onclick="selectOption('Large', 'belly')">Large</div>
+            </div>
+            <input type="hidden" name="belly" id="bellyInput">
+
+            <label>Medical History</label>
+            <div class="options">
+                <div class="option" onclick="selectOption('Yes', 'history')">Yes</div>
+                <div class="option" onclick="selectOption('No', 'history')">No</div>
+            </div>
+            <input type="hidden" name="history" id="historyInput">
+
+            <label>Lifestyle</label>
+            <div class="options">
+                <div class="option" onclick="selectOption('Active', 'lifestyle')">Active</div>
+                <div class="option" onclick="selectOption('Sedentary', 'lifestyle')">Sedentary</div>
+            </div>
+            <input type="hidden" name="lifestyle" id="lifestyleInput">
+
+            <button type="submit">Predict Gender</button>
+        </form>
+    {% endif %}
+</div>
+
+<script>
+    function selectOption(value, field) {
+        document.getElementById(field + 'Input').value = value;
+        const options = document.querySelectorAll(`[onclick*="${field}"]`);
+        options.forEach(opt => {
+            opt.style.background = "#eee";
+            opt.style.color = "#000";
+        });
+        event.target.style.background = "#4CAF50";
+        event.target.style.color = "#fff";
+    }
+
+    function exitForm() {
+        window.location.href = "/";
+    }
+
+    {% if prediction %}
+    // 🎉 Confetti Blast Effect
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    canvas.classList.remove("hidden");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const confettiCount = 300;
+    const gravity = 0.5;
+    const colors = ["#ff0a54", "#ff477e", "#ff7096", "#ff85a1", "#fbb1bd", "#f9bec7", "#ffc6c7", "#d0f4de", "#a9def9", "#e4c1f9"];
+    const confetti = [];
+
+    for (let i = 0; i < confettiCount; i++) {
+        confetti.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            angle: Math.random() * 2 * Math.PI,
+            radius: Math.random() * 10 + 5,
+            velocity: Math.random() * 10 + 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            alpha: 1
+        });
+    }
+
+    let animation;
+    function drawConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(p => {
+            const dx = Math.cos(p.angle) * p.velocity;
+            const dy = Math.sin(p.angle) * p.velocity + gravity;
+            p.x += dx;
+            p.y += dy;
+            p.velocity *= 0.98;
+            p.alpha -= 0.01;
+
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        animation = requestAnimationFrame(drawConfetti);
+    }
+
+    drawConfetti();
+
+    setTimeout(() => {
+        cancelAnimationFrame(animation);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.classList.add("hidden");
+    }, 5000);
+    {% endif %}
+</script>
+
+</body>
+</html>
