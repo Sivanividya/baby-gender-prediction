@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from custom_naive_bayes import GenderPredictor
+from app.custom_naive_bayes import GenderPredictor
 
 
 app = Flask(__name__)
