@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request
-from app.custom_naive_bayes import GenderPredictor
+from custom_naive_bayes import GenderPredictor
 
 app = Flask(__name__)
 model = GenderPredictor("baby-gender-prediction/app/baby_gender_data.xlsx")  # ✅ updated path
