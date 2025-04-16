@@ -3,7 +3,7 @@ from app.custom_naive_bayes import GenderPredictor
 
 
 app = Flask(__name__)
-model = GenderPredictor("baby_gender_data.xlsx")  # ✅ updated path
+model = GenderPredictor("app/baby_gender_data.xlsx")  # ✅ updated path
 
 @app.route("/", methods=["GET", "POST"])
 def index():
